@@ -1,13 +1,19 @@
 # terraform
 
- All configuration needs to be done with Terraform.\n
+ All configuration needs to be done with Terraform.
+ 
 • The deployment needs to be fully automated. - **Done**
+
 • Orchestrated by Kubernetes, the workers need to be dynamically created on- demand. - **Done**
+
 • Make a private git repository and share it with us when ready.  - **Done**
+
 • Make a README.md that provides instructions, explains your choices and references the
 sources you used. - **Done**
+
 • Include what are some other things that you would recommend to add to this project in the
 README.md - **Done**
+
 
 
 The project contains 4 files:
