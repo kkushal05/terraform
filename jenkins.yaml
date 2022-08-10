@@ -1,0 +1,110 @@
+jenkins:
+  systemMessage: "Welcome to the Jenkins JCASC use case"
+  mode: "EXCLUSIVE"
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "admin"
+
+  clouds:
+    - kubernetes:
+        name: "jenkins-build-nodes"
+        serverUrl: "https://<ip>:6443"
+        serverCertificate: "
+        directConnection: false
+        skipTlsVerify: true
+        namespace: "jenkins"
+        jenkinsUrl: "http://jenkins:8080"
+        maxRequestsPerHostStr: 64
+        retentionTimeout: 5
+        connectTimeout: 10
+        readTimeout: 20
+        templates:
+          - name: "pipeline-base-container"
+            serviceAccount: "jenkins-controller-agent"
+            instanceCap: 10
+            idleMinutes: 0
+            slaveConnectTimeout: "500"
+            label: "pipeline-base-container"
+            containers:
+              - name: "jnlp"
+                image: "jenkins/jnlp-slave:latest"
+                privileged: false
+                alwaysPullImage: true
+                workingDir: "/home/jenkins/agent"
+                runAsUser: "1000"
+                runAsGroup: "1000"
+                command: ""
+                args: ""
+                ttyEnabled: true
+                resourceRequestCpu: "10m"
+                resourceLimitCpu: "500m"
+                resourceRequestMemory: "128Mi"
+                resourceLimitMemory: "512Mi"
+              - name: "alpine"
+                image: "alpine:latest"
+                privileged: true
+                alwaysPullImage: true
+                workingDir: "/home/jenkins/agent"
+                runAsUser: "0"
+                runAsGroup: "0"
+                command: ""
+                args: ""
+                ttyEnabled: true
+                resourceRequestCpu: "100m"
+                resourceLimitCpu: "1000m"
+                resourceRequestMemory: "128Mi"
+                resourceLimitMemory: "500Mi"
+            envVars:
+              - envVar:
+                  key: "JENKINS_URL"
+                  value: "http://jenkins:8080"
+              - envVar:
+                  key: "JENKINS_TUNNEL"
+                  value: "jenkins:50000"
+
+jobs:
+  - script: >
+      folder('testjobs')
+  - script: >
+      pipelineJob('testjobs/default-agent') {
+        definition {
+          cps {
+            script("""\
+            pipeline {
+              agent {
+                kubernetes {
+                  yaml '''
+                    apiVersion: v1
+                    kind: Pod
+                    metadata:
+                      labels:
+                        purpose: jenkins-agent
+                    spec:
+                      containers:
+                      - name: alpine
+                        image: alpine:latest
+                        command:
+                        - cat
+                        tty: true
+                    '''
+                }
+              }
+              stages {
+                stage('Test it out') {
+                  steps {
+                    container('alpine') {
+                      sh 'pwd'
+                    }
+                  }
+                }
+              }
+            }
+            """.stripIndent())
+            sandbox()
+          }
+        }
+      }
