@@ -1,6 +1,6 @@
 # terraform
 
- All configuration needs to be done with Terraform.
+ All configuration needs to be done with Terraform.\n
 • The deployment needs to be fully automated. - **Done**
 • Orchestrated by Kubernetes, the workers need to be dynamically created on- demand. - **Done**
 • Make a private git repository and share it with us when ready.  - **Done**
